@@ -1,0 +1,14 @@
+# Fork that adds only the correct stream to this kernel in order
+# to make cuda graphs work.
+owq_commit := 03cfc9941cfbe951ca7dbc614c66bc625fbb9857
+
+awq:
+	rm -rf owq
+	git clone git clone https://github.com/xvyaward/owq
+
+build-owq: owq
+	cd owq/ && git fetch && git checkout $(owq_commit)
+	cd owq/kernel && python setup_cuda.py build
+
+install-awq: build-awq
+	cd owq/owq/kernels && python setup_cuda.py install
