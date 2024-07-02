@@ -340,6 +340,7 @@ def get_model(
         elif sharded:
             raise NotImplementedError(FLASH_ATT_ERROR_MESSAGE.format("Sharded Llama"))
         else:
+            logger.info(f"Send params to CausalLM for model {model_id} revision {revision} with quantize {quantize} and dtype {dtype}")
             return CausalLM(
                 model_id,
                 revision,

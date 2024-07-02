@@ -1,11 +1,11 @@
 import torch
 import time
-
+from loguru import logger
 from dataclasses import dataclass
 from opentelemetry import trace
 from transformers import AutoTokenizer, AutoModelForCausalLM, PreTrainedTokenizerBase
 from typing import Optional, Tuple, List, Type, Dict
-
+from owq.owq_utile import process_owq
 from text_generation_server.models import Model
 from text_generation_server.utils.tokens import batch_top_tokens
 from text_generation_server.models.types import (
@@ -506,6 +506,7 @@ class CausalLM(Model):
             truncation_side="left",
             trust_remote_code=trust_remote_code,
         )
+        logger.info(f"Loaded tokenizer {model_id}")
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
             revision=revision,
@@ -515,14 +516,20 @@ class CausalLM(Model):
                 if torch.cuda.is_available() and torch.cuda.device_count() > 1
                 else None
             ),
-            load_in_8bit=quantize == "bitsandbytes",
+            load_in_8bit= quantize == "bitsandbytes",
             trust_remote_code=trust_remote_code,
         )
+        
+        if quantize == "owq":
+            model,sucess = process_owq(model_id,model)
+            if sucess:
+                logger.info(f"quantized model {model_id} with owq")
         if (
             torch.cuda.is_available()
             and torch.cuda.device_count() == 1
             and quantize != "bitsandbytes"
         ):
+            logger.info("Moving model to GPU")
             model = model.cuda()
 
         if tokenizer.pad_token_id is None:

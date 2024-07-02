@@ -196,7 +196,7 @@ def serve(
         else:
             local_url = unix_socket_template.format(uds_path, 0)
             server_urls = [local_url]
-
+        
         try:
             model = get_model(
                 model_id,
@@ -210,7 +210,9 @@ def serve(
         except Exception:
             logger.exception("Error when initializing model")
             raise
-
+        
+        logger.info("Sussfully initialized model")
+        
         server = aio.server(
             interceptors=[
                 ExceptionInterceptor(),
